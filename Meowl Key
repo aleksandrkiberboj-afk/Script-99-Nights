@@ -1,56 +1,59 @@
-local WindUI = loadstring(game:HttpGet("https://tree-hub.vercel.app/api/UI/WindUI"))()
+local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/Main.lua"))()
 
--- [[ ГЛАВНОЕ ОКНО ]]
+-- [[ WINDOW ]]
 local Window = WindUI:CreateWindow({
     Title = "Meowl Scripter | v1.4.0-beta",
-    Icon = "rbxassetid://4483362458", -- Иконка лапки
+    Icon = "rbxassetid://4483362458",
     Author = "by Meowl",
     Folder = "MeowlWindConfigs"
 })
 
--- [[ СИСТЕМА КЛЮЧЕЙ (Встроена в логику запуска) ]]
-local function KeySystem()
-    local KeyWindow = WindUI:CreateKeySystem({
-        Title = "Key System",
-        Keys = {"Meowl", "Meowl20"},
-        OnSuccess = function()
-            WindUI:Notify({Title = "Success", Content = "Access Granted! / Доступ разрешен", Type = "Success"})
-        end
-    })
-end
-KeySystem()
+-- [[ KEY SYSTEM ]]
+Window:KeySystem({
+    Title = "Key System",
+    Keys = {"Meowl", "Meowl20"},
+    OnSuccess = function()
+        WindUI:Notify({
+            Title = "Meowl Hub", 
+            Content = "Access Granted! Welcome back.", 
+            Type = "Success"
+        })
+    end
+})
 
--- [[ ПЕРЕМЕННЫЕ ]]
+-- [[ GLOBAL VARIABLES ]]
 local lp = game.Players.LocalPlayer
 _G.AutoChop = false
 _G.KillAura = false
 _G.FarmDist = 40
+_G.GodMode = false
+_G.Noclip = false
+_G.Fly = false
 
--- [[ ВКЛАДКИ ]]
-local MainTab = Window:CreateTab("Auto", "zap")
+-- [[ HELPER FUNCTIONS ]]
+local function getSapling()
+    return workspace.GameObjects.Resources.Trees:FindFirstChildOfClass("Model") or workspace:FindFirstChild("Sapling")
+end
+
+-- [[ TABS ]]
+local MainTab = Window:CreateTab("Automation", "zap")
 local CombatTab = Window:CreateTab("Combat", "sword")
-local WorldTab = Window:CreateTab("World", "globe")
+local WorldTab = Window:CreateTab("World & Admin", "globe")
+local VisualsTab = Window:CreateTab("Visuals", "eye")
 
--- [[ РАЗДЕЛ AUTO (Стиль Gec Hub) ]]
-MainTab:CreateSection("Automation / Автоматизация")
-
-MainTab:CreateToggle({
-    Title = "Auto Scrap",
-    Desc = "Automatically brings Scrap Items to the workbench",
-    Value = false,
-    Callback = function(v) _G.AutoScrap = v end
-})
+-- [[ AUTOMATION SECTION ]]
+MainTab:CreateSection("Resource Farming")
 
 MainTab:CreateToggle({
-    Title = "Auto Log",
-    Desc = "Automatically brings logs to the workbench",
+    Title = "Auto Chop",
+    Desc = "Automatically harvests trees within range",
     Value = false,
-    Callback = function(v) _G.AutoLog = v end
+    Callback = function(v) _G.AutoChop = v end
 })
 
 MainTab:CreateSlider({
-    Title = "Radius",
-    Desc = "Radius from 1 to 1000 meters",
+    Title = "Action Radius",
+    Desc = "Set distance from 1m to 1km",
     Min = 1,
     Max = 1000,
     Default = 40,
@@ -58,14 +61,14 @@ MainTab:CreateSlider({
 })
 
 MainTab:CreateToggle({
-    Title = "Auto Base",
-    Desc = "Plants saplings in circles exactly where you left off",
+    Title = "Auto Feed",
+    Desc = "Automatically consumes food from inventory",
     Value = false,
-    Callback = function(v) _G.AutoBase = v end
+    Callback = function(v) _G.AutoFeed = v end
 })
 
--- [[ РАЗДЕЛ COMBAT ]]
-CombatTab:CreateSection("Protection")
+-- [[ COMBAT SECTION ]]
+CombatTab:CreateSection("Survival & Combat")
 
 CombatTab:CreateToggle({
     Title = "Kill Aura",
@@ -76,46 +79,88 @@ CombatTab:CreateToggle({
 
 CombatTab:CreateToggle({
     Title = "God Mode",
-    Desc = "Infinite health for 99 Nights",
+    Desc = "Locks health to prevent death",
     Value = false,
     Callback = function(v) _G.GodMode = v end
 })
 
--- [[ РАЗДЕЛ WORLD (Shapes & Admin Base) ]]
-WorldTab:CreateSection("Admin Structures")
+-- [[ WORLD & ADMIN BASE ]]
+WorldTab:CreateSection("Building Abuse")
 
 WorldTab:CreateButton({
-    Title = "Tree Base (Sapling Abuse)",
-    Desc = "Build infinite pillar upwards",
+    Title = "Tree Base (Sapling Pillar)",
+    Desc = "Stacks saplings to infinity",
     Callback = function()
-        -- Логика постройки столба (как в прошлых версиях)
+        local sap = getSapling()
+        if sap then
+            local pos = lp.Character.HumanoidRootPart.Position
+            for i = 1, 100 do
+                local c = sap:Clone()
+                c.Parent = workspace
+                c:PivotTo(CFrame.new(pos + Vector3.new(0, i * 2, 0)))
+                task.wait(0.01)
+            end
+        end
     end
 })
 
 WorldTab:CreateButton({
-    Title = "Auto Stronghold",
-    Desc = "Build protective ring around you",
+    Title = "Circle Stronghold",
+    Desc = "Builds a protective ring of saplings",
     Callback = function()
-        -- Логика кольца
+        local sap = getSapling()
+        if sap then
+            local pos = lp.Character.HumanoidRootPart.Position
+            for i = 1, 360, 15 do
+                local r = math.rad(i)
+                local c = sap:Clone()
+                c.Parent = workspace
+                c:PivotTo(CFrame.new(pos + Vector3.new(math.cos(r)*20, 0, math.sin(r)*20)))
+            end
+        end
     end
 })
 
--- [[ ВЕРТИКАЛЬНАЯ КНОПКА Meowl :3 (ПОД WINDUI) ]]
+-- [[ MOVEMENT ]]
+WorldTab:CreateSection("Movement")
+
+WorldTab:CreateToggle({
+    Title = "Noclip Toggle",
+    Desc = "Pass through any solid object",
+    Value = false,
+    Callback = function(v) _G.Noclip = v end
+})
+
+-- [[ VISUALS ]]
+VisualsTab:CreateSection("Rendering")
+
+VisualsTab:CreateButton({
+    Title = "Player ESP",
+    Desc = "Highlights all players on the map",
+    Callback = function()
+        for _, p in pairs(game.Players:GetPlayers()) do
+            if p ~= lp and p.Character then
+                local h = Instance.new("Highlight", p.Character)
+                h.FillColor = Color3.fromRGB(0, 255, 120)
+            end
+        end
+    end
+})
+
+-- [[ THE "Meowl :3" VERTICAL BUTTON ]]
 local ScreenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
 local ToggleBtn = Instance.new("TextButton", ScreenGui)
 Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0, 15)
 
-ToggleBtn.Name = "MeowlWindButton"
+ToggleBtn.Name = "MeowlSideButton"
 ToggleBtn.Size = UDim2.new(0, 30, 0, 110)
 ToggleBtn.Position = UDim2.new(1, -35, 0.4, 0)
 ToggleBtn.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 ToggleBtn.Text = "M\ne\no\nw\nl\n\n:\n3"
-ToggleBtn.TextColor3 = Color3.fromRGB(0, 255, 100) -- Тот самый Gec-зеленый
+ToggleBtn.TextColor3 = Color3.fromRGB(0, 255, 120)
 ToggleBtn.Font = Enum.Font.Code
 ToggleBtn.TextSize = 14
 ToggleBtn.Draggable = true
 
-ToggleBtn.MouseButton1Click:Connect(function()
-    Window:Toggle() -- WindUI метод скрытия
-end)
+ToggleBtn.MouseButton
 
