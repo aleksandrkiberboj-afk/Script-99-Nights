@@ -1,106 +1,140 @@
---[[
-    MEOWL SCRIPTER v2.0
-    Game: 99 Nights in the Forest
-    Developer: Meowl_2705 (Display: Meowl_2026)
-    Language: Auto-Detection (RU/EN)
-    License: Open Source for GitHub
-]]
+local RedzLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/REDZHUB/RedzLibV2/main/Source.lua"))()
 
-local WindUI = loadstring(game:HttpGet("https://tree-hub.vercel.app/api/UI/WindUI"))()
-
--- ПРОВЕРКА ЛОКАЛИЗАЦИИ
-local isRussian = game:GetService("LocalizationService").RobloxLocaleId == "ru-ru"
-local L = {
-    Title = "Meowl Scripter | GitHub",
-    BringTab = isRussian and "Транспорт" or "Bring Stuff",
-    Settings = isRussian and "Настройки" or "Settings",
-    ModeLabel = isRussian and "Режим скорости" or "Teleport Mode",
-    TargetLabel = isRussian and "Точка доставки" or "Target Location",
-    StartBtn = isRussian and "Запустить транспорт" or "Start Transport",
-    NotifyTitle = "Meowl System"
-}
-
-local Window = WindUI:CreateWindow({
-    Title = L.Title,
-    Icon = "rbxassetid://10734950309",
-    Author = "Meowl_2705",
-    Theme = "Dark",
-    Transparent = true
+local Window = RedzLib:MakeWindow({
+  Title = "Meowl Scripter | 99 Nights",
+  SubTitle = "by Meowl_2705",
+  SaveFolder = "MeowlConfig.json"
 })
 
--- КОНФИГУРАЦИЯ ТРАНСПОРТА
-local TargetLocation = "Player"
-local TeleportMode = "Normal"
-local ModeDelays = {
-    ["Normal"] = 0.15,
-    ["Fast"] = 0.07,
-    ["Ultra Fast"] = 0.001
-}
+-- Переменные для работы функций
+local TargetPos = "Player"
+local Mode = "Normal"
+local Delays = {["Normal"] = 0.15, ["Fast"] = 0.07, ["Ultra Fast"] = 0.001}
 
--- ВКЛАДКА: BRING STUFF
-local BringTab = Window:CreateTab(L.BringTab, "package")
+-- ВКЛАДКИ
+local MainTab = Window:MakeTab("Auto", "rbxassetid://10734950309")
+local BringTab = Window:MakeTab("Bring", "rbxassetid://10734950309")
+local CombatTab = Window:MakeTab("Combat", "rbxassetid://10734950309")
+local WorldTab = Window:MakeTab("World", "rbxassetid://10734950309")
+local PlayerTab = Window:MakeTab("Player", "rbxassetid://10734950309")
 
-BringTab:Section(L.TargetLabel)
-BringTab:Dropdown(L.TargetLabel, {"Player", "Workbench", "Campfire"}, "Player", function(v)
-    TargetLocation = v
-end)
+--- [ ТУМБЛЕРЫ: AUTOMATION ] ---
+MainTab:AddSection("Automation")
 
-BringTab:Section(L.ModeLabel)
-BringTab:Dropdown(L.ModeLabel, {"Normal", "Fast", "Ultra Fast"}, "Normal", function(v)
-    TeleportMode = v
-end)
-
-BringTab:Button(L.StartBtn, function()
-    local char = game.Players.LocalPlayer.Character
-    local root = char and char:FindFirstChild("HumanoidRootPart")
-    
-    if not root then return end
-    
-    -- Определение координат цели (Локальный поиск)
-    local targetCFrame = root.CFrame
-    if TargetLocation == "Workbench" then
-        local wb = game.Workspace:FindFirstChild("Workbench", true) 
-        if wb then targetCFrame = wb.CFrame else WindUI:Notify(L.NotifyTitle, "Workbench not found!", 3) return end
-    elseif TargetLocation == "Campfire" then
-        local cf = game.Workspace:FindFirstChild("Campfire", true)
-        if cf then targetCFrame = cf.CFrame else WindUI:Notify(L.NotifyTitle, "Campfire not found!", 3) return end
-    end
-
-    -- ЛОГИКА ТЕЛЕПОРТАЦИИ (CLIENT-SIDE VISIBLE SYNC)
+MainTab:AddToggle("Auto Chop", false, function(Value)
+    _G.AutoChop = Value
     task.spawn(function()
-        local count = 0
-        for _, obj in pairs(game.Workspace:GetChildren()) do
-            if obj:IsA("BasePart") and (obj.Name:find("Log") or obj.Name:find("Wood")) then
-                -- Плавная синхронизация для видимости игрокам
-                obj.CFrame = targetCFrame + Vector3.new(0, 7, 0)
-                obj.Velocity = Vector3.new(0, -20, 0) -- Эффект падения сверху
-                count = count + 1
-                task.wait(ModeDelays[TeleportMode])
+        while _G.AutoChop do
+            local tool = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool")
+            if tool and tool:FindFirstChild("Handle") then
+                tool:Activate()
             end
+            task.wait(0.1) -- Скорость клика
         end
-        WindUI:Notify(L.NotifyTitle, isRussian and "Доставлено объектов: "..count or "Delivered objects: "..count, 3)
     end)
 end)
 
--- ВКЛАДКА: ИГРОК
-local PlayerTab = Window:CreateTab("Player", "user")
-PlayerTab:Slider(isRussian and "Скорость" or "Speed", 16, 200, 16, function(v)
-    game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = v
+MainTab:AddToggle("Auto Feed", false, function(Value)
+    _G.AutoFeed = Value
+    task.spawn(function()
+        while _G.AutoFeed do
+            -- Здесь должна быть проверка Hunger через Remote или UI
+            -- Если голод низкий, скрипт ищет еду и использует её
+            task.wait(5)
+        end
+    end)
 end)
 
--- ИНФОРМАЦИЯ О РАЗРАБОТЧИКЕ (MEOWL_2026)
-local InfoTab = Window:CreateTab("Credits", "info")
-InfoTab:Section("Developer Info")
-InfoTab:Button("User: Meowl_2705", function() setclipboard("Meowl_2705") end)
-InfoTab:Button("Display: Meowl_2026", function() setclipboard("Meowl_2026") end)
+MainTab:AddToggle("Auto Campfire", false, function(Value)
+    _G.AutoCampfire = Value
+    task.spawn(function()
+        while _G.AutoCampfire do
+            -- Поиск ближайшего костра и отправка RemoteEvent на добавление топлива
+            task.wait(2)
+        end
+    end)
+end)
 
--- КРАСИВЫЙ ВЫВОД В КОНСОЛЬ (ДЛЯ GITHUB)
-warn("Meowl Scripter Loaded!")
-print([[ 
-    _  _   _   _  _ 
-   | || | | | | || |
-   | || |_| |_| || |
-   |__   _|__   _| |
-      |_|    |_| |_|
-   Meowl_2705 (2026)
-]])
+--- [ ТУМБЛЕРЫ: COMBAT ] ---
+CombatTab:AddSection("Battle")
+
+CombatTab:AddToggle("Kill Aura", false, function(Value)
+    _G.KillAura = Value
+    task.spawn(function()
+        while _G.KillAura do
+            local player = game.Players.LocalPlayer
+            for _, monster in pairs(game.Workspace:GetChildren()) do
+                -- Проверка: это моб, у него есть жизнь и он близко (15 метров)
+                if monster:FindFirstChild("Humanoid") and monster:FindFirstChild("HumanoidRootPart") and monster.Name ~= player.Name then
+                    local dist = (player.Character.HumanoidRootPart.Position - monster.HumanoidRootPart.Position).Magnitude
+                    if dist < 18 then
+                        -- Имитация удара (нужно подставить имя RemoteEvent игры)
+                        local tool = player.Character:FindFirstChildOfClass("Tool")
+                        if tool then tool:Activate() end
+                    end
+                end
+            end
+            task.wait(0.2)
+        end
+    end)
+end)
+
+CombatTab:AddToggle("Godmode (Anti-Damage)", false, function(Value)
+    _G.GodMode = Value
+    local char = game.Players.LocalPlayer.Character
+    if Value and char:FindFirstChild("Health") then
+        char.Health:Destroy() -- Простой обход для удаления скрипта урона
+    end
+end)
+
+--- [ ТРАНСПОРТ ] ---
+BringTab:AddSection("Visible Transport")
+BringTab:AddDropdown("Target Location", {"Player", "Workbench", "Campfire"}, "Player", function(v) TargetPos = v end)
+BringTab:AddDropdown("Teleport Speed", {"Normal", "Fast", "Ultra Fast"}, "Normal", function(v) Mode = v end)
+
+BringTab:AddButton("Bring Logs", function()
+    local root = game.Players.LocalPlayer.Character.HumanoidRootPart
+    local goal = root.CFrame
+    if TargetPos == "Workbench" then
+        local t = game.Workspace:FindFirstChild("Workbench", true)
+        if t then goal = t.CFrame end
+    elseif TargetPos == "Campfire" then
+        local t = game.Workspace:FindFirstChild("Campfire", true)
+        if t then goal = t.CFrame end
+    end
+    task.spawn(function()
+        for _, obj in pairs(game.Workspace:GetChildren()) do
+            if obj:IsA("BasePart") and (obj.Name:find("Log") or obj.Name:find("Wood")) then
+                obj.CFrame = goal + Vector3.new(0, 5, 0)
+                obj.Velocity = Vector3.new(0, -10, 0)
+                task.wait(Delays[Mode])
+            end
+        end
+    end)
+end)
+
+--- [ PLAYER & WORLD ] ---
+PlayerTab:AddSection("Movement")
+PlayerTab:AddSlider("WalkSpeed", 16, 250, 16, function(v) game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = v end)
+
+PlayerTab:AddToggle("Noclip", false, function(v)
+    _G.Noclip = v
+    game:GetService("RunService").Stepped:Connect(function()
+        if _G.Noclip then
+            for _, p in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
+                if p:IsA("BasePart") then p.CanCollide = false end
+            end
+        end
+    end)
+end)
+
+WorldTab:AddSection("Exploits")
+WorldTab:AddButton("Auto Stronghold", function()
+    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(0, 100, 0) -- Замени на реальные координаты
+end)
+
+MainTab:AddSection("Developer: Meowl_2026")
+MainTab:AddButton("Copy Meowl_2705 Info", function() setclipboard("Meowl_2705") end)
+
+RedzLib:SetTheme("Dark")
+
