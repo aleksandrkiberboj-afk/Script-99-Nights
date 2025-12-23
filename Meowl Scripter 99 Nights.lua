@@ -1,105 +1,30 @@
- local Rayfield = loadstring(game:HttpGet('https://raw.githubusercontent.com/shlexware/Rayfield/main/source'))()
+local Rayfield = loadstring(game:HttpGet('https://raw.githubusercontent.com/shlexware/Rayfield/main/source'))()
 
 local Window = Rayfield:CreateWindow({
    Name = "Meowl Scripter | 99 Nights",
    LoadingTitle = "Meowl_2026 Edition",
    LoadingSubtitle = "by Meowl_2705",
-   ConfigurationSaving = {
-      Enabled = true,
-      FolderName = "MeowlConfig",
-      FileName = "99Nights"
-   }
+   ConfigurationSaving = {Enabled = true, FolderName = "MeowlConfig", FileName = "99Nights"}
 })
 
-local TargetPos = "Player"
-local ModeDelay = 0.15
+-- Variables
+local Kids = {"Koala Kid", "Dino Kid", "Squid Kid", "Kraken Kid"}
+local NormalSpeed = 16
 
--- [ АВТОМАТИЗАЦИЯ ]
-local MainTab = Window:CreateTab("Automation", 4483362458)
-MainTab:CreateSection("Farming & Combat")
+-- [ MOVEMENT & SPEED ]
+local MoveTab = Window:CreateTab("Movement", 4483362458)
 
-MainTab:CreateToggle({
-   Name = "Auto Chop",
-   CurrentValue = false,
+MoveTab:CreateSlider({
+   Name = "WalkSpeed Multiplier (Up to 10X)",
+   Range = {16, 160}, -- 160 это как раз 10X от стандартных 16
+   Increment = 1,
+   CurrentValue = 16,
    Callback = function(Value)
-      _G.AutoChop = Value
-      task.spawn(function()
-         while _G.AutoChop do
-            local tool = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool")
-            if tool then tool:Activate() end
-            task.wait(0.1)
-         end
-      end)
+      game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = Value
    end,
 })
 
-MainTab:CreateToggle({
-   Name = "Kill Aura",
-   CurrentValue = false,
-   Callback = function(Value)
-      _G.KillAura = Value
-      task.spawn(function()
-         while _G.KillAura do
-            pcall(function()
-               for _, m in pairs(game.Workspace:GetChildren()) do
-                  if m:FindFirstChild("Humanoid") and m:FindFirstChild("HumanoidRootPart") then
-                     local d = (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - m.HumanoidRootPart.Position).Magnitude
-                     if d < 20 then
-                        local t = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool")
-                        if t then t:Activate() end
-                     end
-                  end
-               end
-            end)
-            task.wait(0.2)
-         end
-      end)
-   end,
-})
-
--- [ ТРАНСПОРТ ]
-local BringTab = Window:CreateTab("Bring Stuff", 4483362458)
-BringTab:CreateSection("Visible Transport")
-
-BringTab:CreateDropdown({
-   Name = "Target Location",
-   Options = {"Player", "Workbench", "Campfire"},
-   CurrentOption = {"Player"},
-   Callback = function(Option)
-      TargetPos = Option[1]
-   end,
-})
-
-BringTab:CreateButton({
-   Name = "Bring All Logs",
-   Callback = function()
-      local root = game.Players.LocalPlayer.Character.HumanoidRootPart
-      task.spawn(function()
-         for _, obj in pairs(game.Workspace:GetChildren()) do
-            if obj:IsA("BasePart") and (obj.Name:find("Log") or obj.Name:find("Wood")) then
-               obj.CFrame = root.CFrame + Vector3.new(0, 5, 0)
-               task.wait(0.1)
-            end
-         end
-      end)
-   end,
-})
-
--- [ ИГРОК И МИР ]
-local WorldTab = Window:CreateTab("World & ESP", 4483362458)
-
-WorldTab:CreateToggle({
-   Name = "Godmode (Bypass)",
-   CurrentValue = false,
-   Callback = function(v)
-      if v then
-         local h = game.Players.LocalPlayer.Character:FindFirstChild("Health")
-         if h then h:Destroy() end
-      end
-   end,
-})
-
-WorldTab:CreateToggle({
+MoveTab:CreateToggle({
    Name = "Noclip",
    CurrentValue = false,
    Callback = function(v)
@@ -114,25 +39,52 @@ WorldTab:CreateToggle({
    end,
 })
 
-WorldTab:CreateButton({
-   Name = "Teleport Stronghold",
-   Callback = function()
-      game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(0, 100, 0)
+-- [ EXPLORE & VISUALS ]
+local WorldTab = Window:CreateTab("World", 4483362458)
+
+WorldTab:CreateToggle({
+   Name = "Explore Map (Full Bright)",
+   CurrentValue = false,
+   Callback = function(Value)
+      if Value then
+         game:GetService("Lighting").Ambient = Color3.fromRGB(255, 255, 255)
+         game:GetService("Lighting").Brightness = 2
+         game:GetService("Lighting").OutdoorAmbient = Color3.fromRGB(255, 255, 255)
+      else
+         game:GetService("Lighting").Ambient = Color3.fromRGB(127, 127, 127)
+         game:GetService("Lighting").Brightness = 1
+         game:GetService("Lighting").OutdoorAmbient = Color3.fromRGB(127, 127, 127)
+      end
    end,
 })
 
--- [ ИНФОРМАЦИЯ ]
-local CreditsTab = Window:CreateTab("Info", 4483362458)
-CreditsTab:CreateSection("Developer Information")
-CreditsTab:CreateLabel("Main Dev: Meowl_2705")
-CreditsTab:CreateLabel("Nickname: Meowl_2026")
-CreditsTab:CreateButton({
-   Name = "Copy Info",
-   Callback = function() 
-      setclipboard("Meowl_2705") 
-      Rayfield:Notify({Title="Meowl System", Content="Скопировано!", Duration=2})
+-- [ RESCUE MISSIONS ]
+local AutoTab = Window:CreateTab("Automation", 4483362458)
+AutoTab:CreateSection("Official Kids Rescue")
+
+AutoTab:CreateButton({
+   Name = "TP & Rescue All 4 Kids",
+   Callback = function()
+      local root = game.Players.LocalPlayer.Character.HumanoidRootPart
+      for _, name in pairs(Kids) do
+          local child = game.Workspace:FindFirstChild(name, true)
+          if child and child:FindFirstChild("HumanoidRootPart") then
+              root.CFrame = child.HumanoidRootPart.CFrame
+              task.wait(0.5)
+              local prompt = child:FindFirstChildOfClass("ProximityPrompt")
+              if prompt then fireproximityprompt(prompt) end
+              task.wait(0.5)
+          end
+      end
+      Rayfield:Notify({Title="Meowl System", Content="All official kids rescued!", Duration=3})
    end,
 })
+
+-- [ INFO ]
+local InfoTab = Window:CreateTab("Info", 4483362458)
+InfoTab:CreateLabel("Main Dev: Meowl_2705")
+InfoTab:CreateLabel("Display: Meowl_2026")
 
 Rayfield:LoadConfiguration()
+
 
