@@ -1,41 +1,50 @@
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
-local Window = Library.CreateLib("Meowl Scripter | Premium v4.5", "Midnight")
+local Window = Library.CreateLib("Meowl Scripter | Premium v4.9", "Midnight")
 
--- [[ VARIABLES & STATES ]]
+-- [[ FORCE UI SCALE AND POSITION TO MATCH SCREENSHOT ]]
+task.spawn(function()
+    local mainGui = game:GetService("CoreGui"):WaitForChild("Meowl Scripter", 10)
+    local mainFrame = mainGui:FindFirstChild("Main")
+    if mainFrame then
+        -- Vertical and narrow layout like in your image
+        mainFrame.Size = UDim2.new(0, 380, 0, 420) 
+        -- Center it on screen
+        mainFrame.Position = UDim2.new(0.5, -190, 0.5, -210)
+    end
+end)
+
+-- [[ STATES ]]
 local lp = game.Players.LocalPlayer
-local RS = game:GetService("RunService")
 _G.Authenticated = false
 _G.Building = false
 _G.AutoChop = false
-_G.KillAura = false
-_G.InfStamina = false
-_G.ESP = false
 
 local function CheckAuth()
     return _G.Authenticated
 end
 
--- [[ TABS ]]
+-- [[ TABS IN ONE LINE ]]
 local Auth = Window:NewTab("Auth")
 local Main = Window:NewTab("Main")
 local Combat = Window:NewTab("Combat")
-local Build = Window:NewTab("Builder")
 local PlayerTab = Window:NewTab("Player")
-local Visuals = Window:NewTab("Visuals")
 local Teleport = Window:NewTab("Teleport")
 
--- [[ AUTH ]]
+-- [[ AUTH SECTION ]]
 local AuthSec = Auth:NewSection("Key System")
 AuthSec:NewTextBox("Enter Key", "Meowl / Meowl20 / MeowlScripter", function(text)
     if text == "Meowl" or text == "Meowl20" or text == "MeowlScripter" then
         _G.Authenticated = true
-        AuthSec:NewLabel("STATUS: ACCESS GRANTED")
+        AuthSec:NewLabel("STATUS: UNLOCKED")
+    else
+        _G.Authenticated = false
+        AuthSec:NewLabel("STATUS: LOCKED")
     end
 end)
 
--- [[ MAIN: AUTO FARM ]]
+-- [[ MAIN SECTION ]]
 local MainSec = Main:NewSection("Automation")
-MainSec:NewToggle("Auto Chop All", "Farms real trees", function(state)
+MainSec:NewToggle("Auto Chop All", "Collect real trees", function(state)
     if not CheckAuth() then return end
     _G.AutoChop = state
     while _G.AutoChop do
@@ -47,22 +56,7 @@ MainSec:NewToggle("Auto Chop All", "Farms real trees", function(state)
     end
 end)
 
-MainSec:NewToggle("Auto Loot (Bring)", "Bring items", function(state)
-    if not CheckAuth() then return end
-    _G.Loot = state
-    while _G.Loot do
-        pcall(function()
-            for _, v in pairs(workspace:GetChildren()) do
-                if v:IsA("BasePart") and v:FindFirstChild("ClickDetector") then
-                    v.CFrame = lp.Character.HumanoidRootPart.CFrame
-                end
-            end
-        end)
-        task.wait(0.5)
-    end
-end)
-
--- [[ COMBAT ]]
+-- [[ COMBAT SECTION ]]
 local CombatSec = Combat:NewSection("Survival")
 CombatSec:NewToggle("God Mode", "Inf Health", function(state)
     if not CheckAuth() then return end
@@ -73,42 +67,7 @@ CombatSec:NewToggle("God Mode", "Inf Health", function(state)
     end
 end)
 
-CombatSec:NewToggle("Kill Aura", "Massive reach", function(state)
-    if not CheckAuth() then return end
-    _G.KillAura = state
-    while _G.KillAura do
-        pcall(function()
-            for _, v in pairs(workspace.GameObjects.Enemies:GetChildren()) do
-                if (lp.Character.HumanoidRootPart.Position - v.HumanoidRootPart.Position).Magnitude < 60 then
-                    v.Humanoid.Health = 0
-                end
-            end
-        end)
-        task.wait(0.2)
-    end
-end)
-
--- [[ BUILDER: SHAPES & BASE ]]
-local BuildSec = Build:NewSection("Geometry Builder")
-
-local function getRealTree()
-    local folder = workspace:FindFirstChild("GameObjects") and workspace.GameObjects.Resources:FindFirstChild("Trees")
-    return folder and folder:FindFirstChildOfClass("Model")
-end
-
-local function placeTree(pos)
-    if not _G.Building or not _G.Authenticated then return end
-    local original = getRealTree()
-    if original then
-        pcall(function()
-            local clone = original:Clone()
-            clone.Parent = original.Parent
-            clone:PivotTo(CFrame.new(pos))
-        end)
-    end
-end
-
-BuildSec:NewButton("Heart Shape ❤️", "Spawn heart", function()
+CombatSec:NewButton("Heart Shape", "Spawn real trees", function()
     if not CheckAuth() then return end
     _G.Building = true
     local center = lp.Character.HumanoidRootPart.Position
@@ -118,74 +77,36 @@ BuildSec:NewButton("Heart Shape ❤️", "Spawn heart", function()
             local t = math.rad(i)
             local x = 16 * math.sin(t)^3
             local z = -(13 * math.cos(t) - 5 * math.cos(2*t) - 2 * math.cos(3*t) - math.cos(4*t))
-            placeTree(center + Vector3.new(x * 3, 0, z * 3))
+            pcall(function()
+                local original = workspace.GameObjects.Resources.Trees:FindFirstChildOfClass("Model")
+                if original then
+                    local clone = original:Clone()
+                    clone.Parent = original.Parent
+                    clone:PivotTo(CFrame.new(center + Vector3.new(x*3, 0, z*3)))
+                end
+            end)
             task.wait(0.1)
         end
     end)
 end)
 
-BuildSec:NewButton("Circle Shape", "Spawn circle", function()
-    if not CheckAuth() then return end
-    _G.Building = true
-    local center = lp.Character.HumanoidRootPart.Position
-    task.spawn(function()
-        for i = 1, 360, 20 do
-            if not _G.Building then break end
-            placeTree(center + Vector3.new(math.cos(math.rad(i))*30, 0, math.sin(math.rad(i))*30))
-            task.wait(0.1)
-        end
-    end)
-end)
-
-BuildSec:NewButton("Spawn Admin Base", "High in sky", function()
-    if not CheckAuth() then return end
-    local part = Instance.new("Part", workspace)
-    part.Size = Vector3.new(100, 2, 100)
-    part.Position = lp.Character.HumanoidRootPart.Position + Vector3.new(0, 500, 0)
-    part.Anchored = true
-    lp.Character.HumanoidRootPart.CFrame = part.CFrame + Vector3.new(0, 5, 0)
-end)
-
-BuildSec:NewButton("STOP PROCESS", "Stop all", function() _G.Building = false end)
-
--- [[ PLAYER ]]
+-- [[ PLAYER SECTION ]]
 local PlayerSec = PlayerTab:NewSection("Movement")
-PlayerSec:NewSlider("WalkSpeed", "Speed", 300, 16, function(s)
+PlayerSec:NewSlider("WalkSpeed", "Set Speed", 300, 16, function(s)
     if not CheckAuth() then return end
     lp.Character.Humanoid.WalkSpeed = s
 end)
 
-PlayerSec:NewToggle("Inf Stamina", "No energy drain", function(state)
-    if not CheckAuth() then return end
-    _G.InfStamina = state
-    while _G.InfStamina do
-        pcall(function() lp.Stamina.Value = 100 end)
-        task.wait(0.5)
-    end
-end)
-
--- [[ VISUALS ]]
-local VisSec = Visuals:NewSection("ESP")
-VisSec:NewToggle("Enemy ESP", "Highlights", function(state)
-    if not CheckAuth() then return end
-    _G.ESP = state
-    while _G.ESP do
-        pcall(function()
-            for _, v in pairs(workspace.GameObjects.Enemies:GetChildren()) do
-                if not v:FindFirstChild("Highlight") then Instance.new("Highlight", v) end
-            end
-        end)
-        task.wait(1)
-    end
-end)
-
--- [[ TELEPORT ]]
+-- [[ TELEPORT SECTION ]]
 local TpSec = Teleport:NewSection("World")
-TpSec:NewButton("Explore Map (3X)", "Unlock all", function()
+TpSec:NewButton("Explore Map", "Teleport to points", function()
     if not CheckAuth() then return end
-    local points = {Vector3.new(500,100,500), Vector3.new(-500,100,500), Vector3.new(0,100,1000)}
-    for _, p in pairs(points) do lp.Character.HumanoidRootPart.CFrame = CFrame.new(p); task.wait(0.5) end
+    local p = {Vector3.new(500,100,500), Vector3.new(-500,100,500)}
+    for _, pos in pairs(p) do 
+        lp.Character.HumanoidRootPart.CFrame = CFrame.new(pos)
+        task.wait(0.5) 
+    end
 end)
 
-print("Meowl Scripter v4.5 Restored.")
+print("Meowl Scripter v4.9 Final Loaded.")
 
