@@ -1,153 +1,110 @@
-local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/Main.lua"))()
+            local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
--- [[ WINDOW ]]
-local Window = WindUI:CreateWindow({
-    Title = "Meowl Scripter | v1.4.0-beta",
-    Icon = "rbxassetid://4483362458",
-    Author = "by Meowl",
-    Folder = "MeowlWindConfigs"
+local Window = Rayfield:CreateWindow({
+   Name = "Meowl Scripter | 99 Nights in Forest",
+   LoadingTitle = "Meowl Ultimate Hub",
+   LoadingSubtitle = "by Meowl_2705 (Developer)",
+   ConfigurationSaving = { Enabled = true, FolderName = "Meowl99Nights" },
+   KeySystem = true,
+   KeySettings = {
+      Title = "Система Ключей",
+      Subtitle = "Введите ключ доступа",
+      Note = "Ключи: Meowl / Meowl20",
+      FileName = "MeowlKey",
+      SaveKey = true,
+      Key = {"Meowl", "Meowl20"}
+   }
 })
 
--- [[ KEY SYSTEM ]]
-Window:KeySystem({
-    Title = "Key System",
-    Keys = {"Meowl", "Meowl20"},
-    OnSuccess = function()
-        WindUI:Notify({
-            Title = "Meowl Hub", 
-            Content = "Access Granted! Welcome back.", 
-            Type = "Success"
-        })
-    end
-})
-
--- [[ GLOBAL VARIABLES ]]
+-- [[ ПЕРЕМЕННЫЕ ]]
 local lp = game.Players.LocalPlayer
 _G.AutoChop = false
 _G.KillAura = false
-_G.FarmDist = 40
 _G.GodMode = false
-_G.Noclip = false
-_G.Fly = false
+_G.FarmRange = 40
+_G.KillRange = 25
 
--- [[ HELPER FUNCTIONS ]]
-local function getSapling()
-    return workspace.GameObjects.Resources.Trees:FindFirstChildOfClass("Model") or workspace:FindFirstChild("Sapling")
-end
+-- [[ ВКЛАДКИ ]]
+local MainTab = Window:CreateTab("Автоматизация", 4483362458)
+local CombatTab = Window:CreateTab("Боевой режим", 4483362458)
+local AdminTab = Window:CreateTab("Админ База", 4483362458)
+local InfoTab = Window:CreateTab("Инфо", 4483362458)
 
--- [[ TABS ]]
-local MainTab = Window:CreateTab("Automation", "zap")
-local CombatTab = Window:CreateTab("Combat", "sword")
-local WorldTab = Window:CreateTab("World & Admin", "globe")
-local VisualsTab = Window:CreateTab("Visuals", "eye")
-
--- [[ AUTOMATION SECTION ]]
-MainTab:CreateSection("Resource Farming")
+-- [[ 1. АВТОМАТИЗАЦИЯ (С ТУМБЛЕРАМИ) ]]
+MainTab:CreateSection("Настройки Фарма")
 
 MainTab:CreateToggle({
-    Title = "Auto Chop",
-    Desc = "Automatically harvests trees within range",
-    Value = false,
-    Callback = function(v) _G.AutoChop = v end
+   Name = "Авто-рубка деревьев",
+   Info = "Автоматически ломает деревья в заданном радиусе",
+   CurrentValue = false,
+   Flag = "ToggleChop", 
+   Callback = function(v) _G.AutoChop = v end,
+})
+
+MainTab:CreateToggle({
+   Name = "Авто-сбор ресурсов",
+   Info = "Притягивает лом и бревна к верстаку",
+   CurrentValue = false,
+   Flag = "ToggleScrap",
+   Callback = function(v) _G.AutoScrap = v end,
 })
 
 MainTab:CreateSlider({
-    Title = "Action Radius",
-    Desc = "Set distance from 1m to 1km",
-    Min = 1,
-    Max = 1000,
-    Default = 40,
-    Callback = function(v) _G.FarmDist = v end
+   Name = "Радиус взаимодействия",
+   Info = "Дистанция работы тумблеров выше (1м - 1000м)",
+   Range = {1, 1000},
+   Increment = 1,
+   CurrentValue = 40,
+   Flag = "RangeSlider",
+   Callback = function(v) _G.FarmRange = v end,
 })
 
-MainTab:CreateToggle({
-    Title = "Auto Feed",
-    Desc = "Automatically consumes food from inventory",
-    Value = false,
-    Callback = function(v) _G.AutoFeed = v end
-})
-
--- [[ COMBAT SECTION ]]
-CombatTab:CreateSection("Survival & Combat")
+-- [[ 2. БОЕВОЙ РЕЖИМ ]]
+CombatTab:CreateSection("Защита и Атака")
 
 CombatTab:CreateToggle({
-    Title = "Kill Aura",
-    Desc = "Automatically attacks animals in range",
-    Value = false,
-    Callback = function(v) _G.KillAura = v end
+   Name = "Килл-Аура (Auto Attack)",
+   Info = "Автоматически бьет всех животных в радиусе",
+   CurrentValue = false,
+   Flag = "ToggleAura",
+   Callback = function(v) _G.KillAura = v end,
 })
 
 CombatTab:CreateToggle({
-    Title = "God Mode",
-    Desc = "Locks health to prevent death",
-    Value = false,
-    Callback = function(v) _G.GodMode = v end
+   Name = "Бессмертие (God Mode)",
+   Info = "Блокирует уровень здоровья на максимуме",
+   CurrentValue = false,
+   Flag = "ToggleGod",
+   Callback = function(v) _G.GodMode = v end,
 })
 
--- [[ WORLD & ADMIN BASE ]]
-WorldTab:CreateSection("Building Abuse")
+-- [[ 3. АДМИН БАЗА ]]
+AdminTab:CreateSection("Постройки (Sapling Abuse)")
 
-WorldTab:CreateButton({
-    Title = "Tree Base (Sapling Pillar)",
-    Desc = "Stacks saplings to infinity",
-    Callback = function()
-        local sap = getSapling()
-        if sap then
-            local pos = lp.Character.HumanoidRootPart.Position
-            for i = 1, 100 do
-                local c = sap:Clone()
-                c.Parent = workspace
-                c:PivotTo(CFrame.new(pos + Vector3.new(0, i * 2, 0)))
-                task.wait(0.01)
-            end
-        end
-    end
+AdminTab:CreateButton({
+   Name = "Построить Админ-Столб",
+   Info = "Создает бесконечную башню из саженцев вверх",
+   Callback = function()
+      local s = workspace.GameObjects.Resources.Trees:FindFirstChildOfClass("Model")
+      if s then
+         local p = lp.Character.HumanoidRootPart.Position
+         for i = 1, 100 do
+            local c = s:Clone()
+            c.Parent = workspace
+            c:PivotTo(CFrame.new(p + Vector3.new(0, i * 2.5, 0)))
+            task.wait(0.01)
+         end
+      end
+   end,
 })
 
-WorldTab:CreateButton({
-    Title = "Circle Stronghold",
-    Desc = "Builds a protective ring of saplings",
-    Callback = function()
-        local sap = getSapling()
-        if sap then
-            local pos = lp.Character.HumanoidRootPart.Position
-            for i = 1, 360, 15 do
-                local r = math.rad(i)
-                local c = sap:Clone()
-                c.Parent = workspace
-                c:PivotTo(CFrame.new(pos + Vector3.new(math.cos(r)*20, 0, math.sin(r)*20)))
-            end
-        end
-    end
-})
+-- [[ 4. ИНФО О РАЗРАБОТЧИКЕ ]]
+InfoTab:CreateSection("Данные разработчика")
+InfoTab:CreateLabel("Ник: Meowl_2705")
+InfoTab:CreateLabel("Статус: Developer / Девпловер")
+InfoTab:CreateLabel("Версия: 1.4.0-beta (99 Nights Edition)")
 
--- [[ MOVEMENT ]]
-WorldTab:CreateSection("Movement")
-
-WorldTab:CreateToggle({
-    Title = "Noclip Toggle",
-    Desc = "Pass through any solid object",
-    Value = false,
-    Callback = function(v) _G.Noclip = v end
-})
-
--- [[ VISUALS ]]
-VisualsTab:CreateSection("Rendering")
-
-VisualsTab:CreateButton({
-    Title = "Player ESP",
-    Desc = "Highlights all players on the map",
-    Callback = function()
-        for _, p in pairs(game.Players:GetPlayers()) do
-            if p ~= lp and p.Character then
-                local h = Instance.new("Highlight", p.Character)
-                h.FillColor = Color3.fromRGB(0, 255, 120)
-            end
-        end
-    end
-})
-
--- [[ THE "Meowl :3" VERTICAL BUTTON ]]
+-- [[ ВЕРТИКАЛЬНАЯ КНОПКА "Meowl :3" ]]
 local ScreenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
 local ToggleBtn = Instance.new("TextButton", ScreenGui)
 Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0, 15)
@@ -162,5 +119,8 @@ ToggleBtn.Font = Enum.Font.Code
 ToggleBtn.TextSize = 14
 ToggleBtn.Draggable = true
 
-ToggleBtn.MouseButton
+ToggleBtn.MouseButton1Click:Connect(function()
+    local core = game:GetService("CoreGui"):FindFirstChild("Rayfield")
+    if core then core.Enabled = not core.Enabled end
+end)
 
