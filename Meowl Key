@@ -1,112 +1,97 @@
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
-local Window = Library.CreateLib("Meowl Scripter | Premium v4.9", "Midnight")
+local Window = Library.CreateLib("Meowl Scripter | Premium v5.6", "Midnight")
 
--- [[ FORCE UI SCALE AND POSITION TO MATCH SCREENSHOT ]]
+-- [[ ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ]]
+local lp = game.Players.LocalPlayer
+_G.Authenticated = false
+
+-- [[ СОЗДАНИЕ КНОПКИ ОТКРЫТИЯ (КАК НА СКРИНЕ) ]]
+local ScreenGui = Instance.new("ScreenGui")
+local OpenBtn = Instance.new("TextButton")
+
+ScreenGui.Parent = game:GetService("CoreGui")
+ScreenGui.Name = "MeowlToggleButton"
+
+OpenBtn.Name = "OpenButton"
+OpenBtn.Parent = ScreenGui
+OpenBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+OpenBtn.BorderSizePixel = 2
+OpenBtn.Position = UDim2.new(0, 0, 0.45, 0) -- Слева сбоку
+OpenBtn.Size = UDim2.new(0, 80, 0, 30)
+OpenBtn.Font = Enum.Font.SourceSansBold
+OpenBtn.Text = "Meowl :3"
+OpenBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+OpenBtn.TextSize = 14
+OpenBtn.Visible = false -- Изначально скрыта
+
+-- Скругление как на картинке
+local btnCorner = Instance.new("UICorner", OpenBtn)
+btnCorner.CornerRadius = math.min(0, 15)
+
+-- [[ ЛОГИКА СКРЫТИЯ/ОТКРЫТИЯ ]]
+local mainFrame = nil
 task.spawn(function()
-    local mainGui = game:GetService("CoreGui"):WaitForChild("Meowl Scripter", 10)
-    local mainFrame = mainGui:FindFirstChild("Main")
+    local gui = game:GetService("CoreGui"):WaitForChild("Meowl Scripter", 10)
+    mainFrame = gui:FindFirstChild("Main")
     if mainFrame then
-        -- Vertical and narrow layout like in your image
-        mainFrame.Size = UDim2.new(0, 380, 0, 420) 
-        -- Center it on screen
+        mainFrame.Size = UDim2.new(0, 380, 0, 420)
         mainFrame.Position = UDim2.new(0.5, -190, 0.5, -210)
     end
 end)
 
--- [[ STATES ]]
-local lp = game.Players.LocalPlayer
-_G.Authenticated = false
-_G.Building = false
-_G.AutoChop = false
-
-local function CheckAuth()
-    return _G.Authenticated
+local function ToggleUI()
+    if mainFrame then
+        local isVisible = mainFrame.Visible
+        mainFrame.Visible = not isVisible
+        OpenBtn.Visible = isVisible -- Показываем кнопку, если меню скрыто
+    end
 end
 
--- [[ TABS IN ONE LINE ]]
-local Auth = Window:NewTab("Auth")
-local Main = Window:NewTab("Main")
-local Combat = Window:NewTab("Combat")
-local PlayerTab = Window:NewTab("Player")
-local Teleport = Window:NewTab("Teleport")
+OpenBtn.MouseButton1Click:Connect(ToggleUI)
 
--- [[ AUTH SECTION ]]
-local AuthSec = Auth:NewSection("Key System")
-AuthSec:NewTextBox("Enter Key", "Meowl / Meowl20 / MeowlScripter", function(text)
-    if text == "Meowl" or text == "Meowl20" or text == "MeowlScripter" then
+-- [[ ВКЛАДКИ ]]
+local Auth = Window:NewTab("Key / Ключ")
+local Main = Window:NewTab("Main / Главная")
+local Settings = Window:NewTab("Settings")
+
+-- [[ СЕКЦИЯ КЛЮЧА ]]
+local AuthSec = Auth:NewSection("Authorization")
+AuthSec:NewTextBox("Enter Key", "Meowl / Meowl20", function(text)
+    if text == "Meowl" or text == "Meowl20" then
         _G.Authenticated = true
-        AuthSec:NewLabel("STATUS: UNLOCKED")
-    else
-        _G.Authenticated = false
-        AuthSec:NewLabel("STATUS: LOCKED")
+        AuthSec:NewLabel("Access Granted! / Доступ разрешен")
     end
 end)
 
--- [[ MAIN SECTION ]]
+-- [[ ОСНОВНЫЕ ФУНКЦИИ ]]
 local MainSec = Main:NewSection("Automation")
-MainSec:NewToggle("Auto Chop All", "Collect real trees", function(state)
-    if not CheckAuth() then return end
+MainSec:NewToggle("Auto Chop / Авто-рубка", "Farms trees", function(state)
+    if not _G.Authenticated then return end
     _G.AutoChop = state
-    while _G.AutoChop do
-        pcall(function()
-            local trees = workspace.GameObjects.Resources.Trees:GetChildren()
-            for _, v in pairs(trees) do fireclickdetector(v:FindFirstChildOfClass("ClickDetector")) end
-        end)
-        task.wait(0.3)
-    end
-end)
-
--- [[ COMBAT SECTION ]]
-local CombatSec = Combat:NewSection("Survival")
-CombatSec:NewToggle("God Mode", "Inf Health", function(state)
-    if not CheckAuth() then return end
-    _G.God = state
-    while _G.God do
-        pcall(function() lp.Character.Humanoid.Health = 9e9 end)
-        task.wait(0.1)
-    end
-end)
-
-CombatSec:NewButton("Heart Shape", "Spawn real trees", function()
-    if not CheckAuth() then return end
-    _G.Building = true
-    local center = lp.Character.HumanoidRootPart.Position
     task.spawn(function()
-        for i = 0, 360, 15 do
-            if not _G.Building then break end
-            local t = math.rad(i)
-            local x = 16 * math.sin(t)^3
-            local z = -(13 * math.cos(t) - 5 * math.cos(2*t) - 2 * math.cos(3*t) - math.cos(4*t))
+        while _G.AutoChop do
             pcall(function()
-                local original = workspace.GameObjects.Resources.Trees:FindFirstChildOfClass("Model")
-                if original then
-                    local clone = original:Clone()
-                    clone.Parent = original.Parent
-                    clone:PivotTo(CFrame.new(center + Vector3.new(x*3, 0, z*3)))
+                for _, v in pairs(workspace.GameObjects.Resources.Trees:GetChildren()) do
+                    fireclickdetector(v:FindFirstChildOfClass("ClickDetector"))
                 end
             end)
-            task.wait(0.1)
+            task.wait(0.3)
         end
     end)
 end)
 
--- [[ PLAYER SECTION ]]
-local PlayerSec = PlayerTab:NewSection("Movement")
-PlayerSec:NewSlider("WalkSpeed", "Set Speed", 300, 16, function(s)
-    if not CheckAuth() then return end
-    lp.Character.Humanoid.WalkSpeed = s
+-- [[ НАСТРОЙКИ И ЗАКРЫТИЕ ]]
+local SetSec = Settings:NewSection("Interface Settings")
+
+-- Кнопка закрытия как на скрине
+SetSec:NewButton("Close Menu / Скрыть панель", "Shows Toggle Button", function()
+    ToggleUI()
 end)
 
--- [[ TELEPORT SECTION ]]
-local TpSec = Teleport:NewSection("World")
-TpSec:NewButton("Explore Map", "Teleport to points", function()
-    if not CheckAuth() then return end
-    local p = {Vector3.new(500,100,500), Vector3.new(-500,100,500)}
-    for _, pos in pairs(p) do 
-        lp.Character.HumanoidRootPart.CFrame = CFrame.new(pos)
-        task.wait(0.5) 
-    end
+SetSec:NewButton("Destroy Script / Удалить", "Full remove", function()
+    game:GetService("CoreGui"):FindFirstChild("Meowl Scripter"):Destroy()
+    ScreenGui:Destroy()
 end)
 
-print("Meowl Scripter v4.9 Final Loaded.")
+print("Meowl Scripter v5.6 with Side Toggle Button Loaded!")
 
