@@ -1,3 +1,4 @@
+https://raw.githubusercontent.com/aleksandrkiberboj-afk/Script-99-Nights/main/Meowl%20Scripter%2099%20Nights.lua?v=
 local Rayfield = loadstring(game:HttpGet('https://raw.githubusercontent.com/shlexware/Rayfield/main/source'))()
 
 local Window = Rayfield:CreateWindow({
@@ -7,21 +8,16 @@ local Window = Rayfield:CreateWindow({
    ConfigurationSaving = {Enabled = true, FolderName = "MeowlConfig", FileName = "99Nights"}
 })
 
--- Variables
 local Kids = {"Koala Kid", "Dino Kid", "Squid Kid", "Kraken Kid"}
-local NormalSpeed = 16
 
--- [ MOVEMENT & SPEED ]
+-- [ MOVEMENT ]
 local MoveTab = Window:CreateTab("Movement", 4483362458)
-
 MoveTab:CreateSlider({
-   Name = "WalkSpeed Multiplier (Up to 10X)",
-   Range = {16, 160}, -- 160 это как раз 10X от стандартных 16
+   Name = "Speed Multiplier (1X - 10X)",
+   Range = {16, 160},
    Increment = 1,
    CurrentValue = 16,
-   Callback = function(Value)
-      game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = Value
-   end,
+   Callback = function(v) game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = v end,
 })
 
 MoveTab:CreateToggle({
@@ -39,52 +35,41 @@ MoveTab:CreateToggle({
    end,
 })
 
--- [ EXPLORE & VISUALS ]
-local WorldTab = Window:CreateTab("World", 4483362458)
-
+-- [ EXPLORE ]
+local WorldTab = Window:CreateTab("Explore", 4483362458)
 WorldTab:CreateToggle({
    Name = "Explore Map (Full Bright)",
    CurrentValue = false,
-   Callback = function(Value)
-      if Value then
-         game:GetService("Lighting").Ambient = Color3.fromRGB(255, 255, 255)
-         game:GetService("Lighting").Brightness = 2
-         game:GetService("Lighting").OutdoorAmbient = Color3.fromRGB(255, 255, 255)
+   Callback = function(v)
+      local L = game:GetService("Lighting")
+      if v then
+         L.Ambient = Color3.fromRGB(255, 255, 255)
+         L.Brightness = 2
       else
-         game:GetService("Lighting").Ambient = Color3.fromRGB(127, 127, 127)
-         game:GetService("Lighting").Brightness = 1
-         game:GetService("Lighting").OutdoorAmbient = Color3.fromRGB(127, 127, 127)
+         L.Ambient = Color3.fromRGB(127, 127, 127)
+         L.Brightness = 1
       end
    end,
 })
 
--- [ RESCUE MISSIONS ]
+-- [ RESCUE & AUTO ]
 local AutoTab = Window:CreateTab("Automation", 4483362458)
-AutoTab:CreateSection("Official Kids Rescue")
-
 AutoTab:CreateButton({
-   Name = "TP & Rescue All 4 Kids",
+   Name = "TP & Rescue Official Kids",
    Callback = function()
       local root = game.Players.LocalPlayer.Character.HumanoidRootPart
       for _, name in pairs(Kids) do
-          local child = game.Workspace:FindFirstChild(name, true)
-          if child and child:FindFirstChild("HumanoidRootPart") then
-              root.CFrame = child.HumanoidRootPart.CFrame
+          local c = game.Workspace:FindFirstChild(name, true)
+          if c and c:FindFirstChild("HumanoidRootPart") then
+              root.CFrame = c.HumanoidRootPart.CFrame
               task.wait(0.5)
-              local prompt = child:FindFirstChildOfClass("ProximityPrompt")
-              if prompt then fireproximityprompt(prompt) end
+              local p = c:FindFirstChildOfClass("ProximityPrompt")
+              if p then fireproximityprompt(p) end
               task.wait(0.5)
           end
       end
-      Rayfield:Notify({Title="Meowl System", Content="All official kids rescued!", Duration=3})
    end,
 })
 
--- [ INFO ]
-local InfoTab = Window:CreateTab("Info", 4483362458)
-InfoTab:CreateLabel("Main Dev: Meowl_2705")
-InfoTab:CreateLabel("Display: Meowl_2026")
-
 Rayfield:LoadConfiguration()
-
 
