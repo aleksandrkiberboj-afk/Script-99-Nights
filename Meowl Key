@@ -1,31 +1,6 @@
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
 local Window = Library.CreateLib("Meowl Scripter | Premium v4.5", "Midnight")
 
--- [[ MOBILE DRAGGABLE LOGIC ]]
-local UserInputService = game:GetService("UserInputService")
-task.spawn(function()
-    local mainFrame = game:GetService("CoreGui"):WaitForChild("Meowl Scripter", 5):FindFirstChild("Main")
-    if mainFrame then
-        local dragging, dragInput, dragStart, startPos
-        mainFrame.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                dragging = true
-                dragStart = input.Position
-                startPos = mainFrame.Position
-                input.Changed:Connect(function()
-                    if input.UserInputState == Enum.UserInputState.End then dragging = false end
-                end)
-            end
-        end)
-        UserInputService.InputChanged:Connect(function(input)
-            if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-                local delta = input.Position - dragStart
-                mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-            end
-        end)
-    end
-end)
-
 -- [[ VARIABLES & STATES ]]
 local lp = game.Players.LocalPlayer
 local RS = game:GetService("RunService")
@@ -212,5 +187,5 @@ TpSec:NewButton("Explore Map (3X)", "Unlock all", function()
     for _, p in pairs(points) do lp.Character.HumanoidRootPart.CFrame = CFrame.new(p); task.wait(0.5) end
 end)
 
-print("Meowl Scripter v4.5: Full Features Loaded.")
+print("Meowl Scripter v4.5 Restored.")
 
