@@ -1,34 +1,49 @@
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
-local Window = Library.CreateLib("Meowl Scripter | Premium v5.6", "Midnight")
+local Window = Library.CreateLib("Meowl Scripter | Premium v5.7", "Midnight")
 
--- [[ ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ]]
-local lp = game.Players.LocalPlayer
-_G.Authenticated = false
-
--- [[ СОЗДАНИЕ КНОПКИ ОТКРЫТИЯ (КАК НА СКРИНЕ) ]]
+-- [[ TOGGLE BUTTON WITH DRAG LOGIC ]]
 local ScreenGui = Instance.new("ScreenGui")
 local OpenBtn = Instance.new("TextButton")
+local btnCorner = Instance.new("UICorner", OpenBtn)
 
 ScreenGui.Parent = game:GetService("CoreGui")
 ScreenGui.Name = "MeowlToggleButton"
 
 OpenBtn.Name = "OpenButton"
 OpenBtn.Parent = ScreenGui
-OpenBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-OpenBtn.BorderSizePixel = 2
-OpenBtn.Position = UDim2.new(0, 0, 0.45, 0) -- Слева сбоку
-OpenBtn.Size = UDim2.new(0, 80, 0, 30)
-OpenBtn.Font = Enum.Font.SourceSansBold
+OpenBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+OpenBtn.Size = UDim2.new(0, 85, 0, 35)
+OpenBtn.Position = UDim2.new(0, 10, 0.5, 0)
 OpenBtn.Text = "Meowl :3"
 OpenBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+OpenBtn.Font = Enum.Font.Code
 OpenBtn.TextSize = 14
-OpenBtn.Visible = false -- Изначально скрыта
+OpenBtn.BorderSizePixel = 0
+OpenBtn.Visible = false
+btnCorner.CornerRadius = math.min(0, 12)
 
--- Скругление как на картинке
-local btnCorner = Instance.new("UICorner", OpenBtn)
-btnCorner.CornerRadius = math.min(0, 15)
+-- Make the small button draggable too
+local dragBtnStart, startBtnPos, draggingBtn
+OpenBtn.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        draggingBtn = true
+        dragBtnStart = input.Position
+        startBtnPos = OpenBtn.Position
+    end
+end)
+game:GetService("UserInputService").InputChanged:Connect(function(input)
+    if draggingBtn and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - dragBtnStart
+        OpenBtn.Position = UDim2.new(startBtnPos.X.Scale, startBtnPos.X.Offset + delta.X, startPos.Y.Scale, startBtnPos.Y.Offset + delta.Y)
+    end
+end)
+game:GetService("UserInputService").InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        draggingBtn = false
+    end
+end)
 
--- [[ ЛОГИКА СКРЫТИЯ/ОТКРЫТИЯ ]]
+-- [[ UI SIZE & CENTER ]]
 local mainFrame = nil
 task.spawn(function()
     local gui = game:GetService("CoreGui"):WaitForChild("Meowl Scripter", 10)
@@ -41,31 +56,29 @@ end)
 
 local function ToggleUI()
     if mainFrame then
-        local isVisible = mainFrame.Visible
-        mainFrame.Visible = not isVisible
-        OpenBtn.Visible = isVisible -- Показываем кнопку, если меню скрыто
+        mainFrame.Visible = not mainFrame.Visible
+        OpenBtn.Visible = not mainFrame.Visible
     end
 end
-
 OpenBtn.MouseButton1Click:Connect(ToggleUI)
 
--- [[ ВКЛАДКИ ]]
+-- [[ TABS & SECTIONS WITH DIVIDERS ]]
 local Auth = Window:NewTab("Key / Ключ")
 local Main = Window:NewTab("Main / Главная")
+local Combat = Window:NewTab("Combat / Бой")
 local Settings = Window:NewTab("Settings")
 
--- [[ СЕКЦИЯ КЛЮЧА ]]
-local AuthSec = Auth:NewSection("Authorization")
+-- Section with "Bars" style separator
+local AuthSec = Auth:NewSection("--- [ KEY SYSTEM ] ---")
 AuthSec:NewTextBox("Enter Key", "Meowl / Meowl20", function(text)
     if text == "Meowl" or text == "Meowl20" then
         _G.Authenticated = true
-        AuthSec:NewLabel("Access Granted! / Доступ разрешен")
+        AuthSec:NewLabel("--- ACCESS GRANTED ---")
     end
 end)
 
--- [[ ОСНОВНЫЕ ФУНКЦИИ ]]
-local MainSec = Main:NewSection("Automation")
-MainSec:NewToggle("Auto Chop / Авто-рубка", "Farms trees", function(state)
+local MainSec = Main:NewSection("--- [ AUTOMATION ] ---")
+MainSec:NewToggle("Auto Chop", "Farms trees / Рубка", function(state)
     if not _G.Authenticated then return end
     _G.AutoChop = state
     task.spawn(function()
@@ -80,18 +93,21 @@ MainSec:NewToggle("Auto Chop / Авто-рубка", "Farms trees", function(sta
     end)
 end)
 
--- [[ НАСТРОЙКИ И ЗАКРЫТИЕ ]]
-local SetSec = Settings:NewSection("Interface Settings")
-
--- Кнопка закрытия как на скрине
-SetSec:NewButton("Close Menu / Скрыть панель", "Shows Toggle Button", function()
-    ToggleUI()
+local CombatSec = Combat:NewSection("--- [ SURVIVAL ] ---")
+CombatSec:NewToggle("God Mode", "Inf Health / Бессмертие", function(state)
+    if not _G.Authenticated then return end
+    _G.God = state
+    task.spawn(function()
+        while _G.God do pcall(function() lp.Character.Humanoid.Health = 9e9 end) task.wait(0.1) end
+    end)
 end)
 
-SetSec:NewButton("Destroy Script / Удалить", "Full remove", function()
+local SetSec = Settings:NewSection("--- [ INTERFACE ] ---")
+SetSec:NewButton("Close Menu / Скрыть", "Toggle View", ToggleUI)
+
+SetSec:NewButton("Destroy Script", "Remove everything", function()
     game:GetService("CoreGui"):FindFirstChild("Meowl Scripter"):Destroy()
     ScreenGui:Destroy()
 end)
 
-print("Meowl Scripter v5.6 with Side Toggle Button Loaded!")
-
+print("Meowl Scripter v5.7: Draggable button and dividers added.")
