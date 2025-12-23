@@ -1,98 +1,139 @@
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
-local Window = Library.CreateLib("Meowl Scripter | Premium v5.8", "Midnight")
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
--- [[ ПРОВЕРКА И ЦЕНТРИРОВАНИЕ ПАНЕЛИ ]]
-local mainFrame = nil
-task.spawn(function()
-    local coreGui = game:GetService("CoreGui")
-    for i = 1, 100 do
-        if coreGui:FindFirstChild("Meowl Scripter") then
-            mainFrame = coreGui["Meowl Scripter"]:FindFirstChild("Main")
-            if mainFrame then
-                mainFrame.Size = UDim2.new(0, 380, 0, 420)
-                mainFrame.Position = UDim2.new(0.5, -190, 0.5, -210)
-                break
-            end
-        end
-        task.wait(0.1)
-    end
-end)
+local Window = Rayfield:CreateWindow({
+   Name = "Meowl Scripter | Premium v6.0",
+   LoadingTitle = "Meowl Hub | Animal Update",
+   LoadingSubtitle = "Full Features & Teleports",
+   ConfigurationSaving = { Enabled = true, FolderName = "MeowlScripts" },
+   KeySystem = true,
+   KeySettings = {
+      Title = "Key System | Система Ключей",
+      Subtitle = "Enter key",
+      Note = "Keys: Meowl / Meowl20",
+      FileName = "MeowlKey",
+      SaveKey = true,
+      Key = {"Meowl", "Meowl20"}
+   }
+})
 
--- [[ БОКОВАЯ КНОПКА "Meowl :3" (ВСЕГДА ТУТ) ]]
-local ScreenGui = Instance.new("ScreenGui")
-local OpenBtn = Instance.new("TextButton")
-local btnCorner = Instance.new("UICorner", OpenBtn)
+local lp = game.Players.LocalPlayer
+_G.AutoChop = false
+_G.God = false
 
-ScreenGui.Parent = game:GetService("CoreGui")
-ScreenGui.Name = "MeowlSideControl"
+-- [[ ТАБЫ ]]
+local MainTab = Window:CreateTab("--- Main / Главная ---", 4483362458)
+local AnimalTab = Window:CreateTab("--- Animals / Животные ---", 4483362458)
+local WorldTab = Window:CreateTab("--- World / Мир ---", 4483362458)
 
-OpenBtn.Parent = ScreenGui
-OpenBtn.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-OpenBtn.Size = UDim2.new(0, 90, 0, 35)
-OpenBtn.Position = UDim2.new(0, 5, 0.4, 0) -- Слева сбоку
-OpenBtn.Text = "Meowl :3"
-OpenBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-OpenBtn.Font = Enum.Font.Code
-OpenBtn.TextSize = 15
-OpenBtn.BorderSizePixel = 1
-OpenBtn.Draggable = true -- Встроенное перетаскивание (самое стабильное)
+-- [[ MAIN: Скриншотные функции ]]
+MainTab:CreateSection("||| Automation / Автоматизация |||")
 
-btnCorner.CornerRadius = math.min(0, 10)
+MainTab:CreateButton({
+   Name = "Bring All Items / Собрать всё (Screen)",
+   Callback = function()
+      for _, v in pairs(workspace:GetChildren()) do
+         if v:IsA("BasePart") and v:FindFirstChild("ClickDetector") then
+            v.CFrame = lp.Character.HumanoidRootPart.CFrame
+         end
+      end
+   end,
+})
 
-OpenBtn.MouseButton1Click:Connect(function()
-    if mainFrame then
-        mainFrame.Visible = not mainFrame.Visible
-    end
-end)
-
--- [[ ВКЛАДКИ С ПАЛОЧКАМИ-РАЗДЕЛИТЕЛЯМИ ]]
-local Auth = Window:NewTab("--- Auth ---")
-local Main = Window:NewTab("--- Main ---")
-local Combat = Window:NewTab("--- Combat ---")
-local Settings = Window:NewTab("--- Config ---")
-
--- [[ KEY SYSTEM ]]
-local AuthSec = Auth:NewSection("||| Authorization |||") -- Вот твои "палочки"
-AuthSec:NewTextBox("Key / Ключ", "Enter Key Here", function(text)
-    if text == "Meowl" or text == "Meowl20" then
-        _G.Authenticated = true
-        AuthSec:NewLabel(">>> ACCESS GRANTED <<<")
-    end
-end)
-
--- [[ AUTOMATION ]]
-local MainSec = Main:NewSection("||| Items & Farm |||")
-MainSec:NewToggle("Auto Chop / Авто-рубка", "Farms trees", function(state)
-    if not _G.Authenticated then return end
-    _G.AutoChop = state
-    task.spawn(function()
-        while _G.AutoChop do
+MainTab:CreateToggle({
+   Name = "Auto Chop / Авто-рубка (Foxname)",
+   CurrentValue = false,
+   Flag = "AutoChop",
+   Callback = function(Value)
+      _G.AutoChop = Value
+      task.spawn(function()
+         while _G.AutoChop do
             pcall(function()
-                for _, v in pairs(workspace.GameObjects.Resources.Trees:GetChildren()) do
-                    fireclickdetector(v:FindFirstChildOfClass("ClickDetector"))
-                end
+               for _, v in pairs(workspace.GameObjects.Resources.Trees:GetChildren()) do
+                  fireclickdetector(v:FindFirstChildOfClass("ClickDetector"))
+               end
             end)
             task.wait(0.3)
-        end
-    end)
-end)
+         end
+      end)
+   end,
+})
 
--- [[ SURVIVAL ]]
-local CombatSec = Combat:NewSection("||| Power & Shapes |||")
-CombatSec:NewToggle("God Mode / Бессмертие", "Infinite HP", function(state)
-    if not _G.Authenticated then return end
-    _G.God = state
-    task.spawn(function()
-        while _G.God do pcall(function() game.Players.LocalPlayer.Character.Humanoid.Health = 9e9 end) task.wait(0.1) end
-    end)
-end)
+-- [[ ANIMALS: Твои новые функции ]]
+AnimalTab:CreateSection("||| Animal Teleports / Телепорты животных |||")
 
--- [[ SETTINGS ]]
-local SetSec = Settings:NewSection("||| Interface Config |||")
-SetSec:NewButton("Destroy Script / Удалить", "Full UI Removal", function()
-    game:GetService("CoreGui"):FindFirstChild("Meowl Scripter"):Destroy()
-    ScreenGui:Destroy()
-end)
+AnimalTab:CreateButton({
+   Name = "Bring Animals / ТП Животных к себе",
+   Info = "Мамонты, волки и др. в одну точку",
+   Callback = function()
+      pcall(function()
+         -- Поиск моделей животных в GameObjects или Workspace
+         local targets = workspace:FindFirstChild("GameObjects") and workspace.GameObjects:FindFirstChild("Animals") or workspace:FindFirstChild("Animals")
+         if targets then
+            for _, v in pairs(targets:GetChildren()) do
+               local root = v:FindFirstChild("HumanoidRootPart") or v:FindFirstChild("UpperTorso") or v:FindFirstChildOfClass("Part")
+               if root then
+                  root.CFrame = lp.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, -5)
+               end
+            end
+         end
+      end)
+   end,
+})
 
-print("Meowl Scripter v5.8: Stability and Design fix.")
+AnimalTab:CreateButton({
+   Name = "TP to Animal / ТП к животному",
+   Info = "Телепорт к ближайшему зверю",
+   Callback = function()
+      pcall(function()
+         local targets = workspace:FindFirstChild("GameObjects") and workspace.GameObjects:FindFirstChild("Animals") or workspace:FindFirstChild("Animals")
+         if targets then
+            local animal = targets:FindFirstChildOfClass("Model")
+            if animal then
+               lp.Character.HumanoidRootPart.CFrame = animal:GetPivot()
+            end
+         end
+      end)
+   end,
+})
+
+-- [[ WORLD ]]
+WorldTab:CreateSection("||| Movement / Движение |||")
+
+WorldTab:CreateSlider({
+   Name = "Speed / Скорость (VoidWare)",
+   Range = {16, 300},
+   Increment = 1,
+   CurrentValue = 16,
+   Flag = "SpeedSlider",
+   Callback = function(Value) lp.Character.Humanoid.WalkSpeed = Value end,
+})
+
+WorldTab:CreateToggle({
+   Name = "God Mode / Бессмертие",
+   CurrentValue = false,
+   Flag = "GodMode",
+   Callback = function(Value)
+      _G.God = Value
+      task.spawn(function()
+         while _G.God do pcall(function() lp.Character.Humanoid.Health = 9e9 end) task.wait(0.1) end
+      end)
+   end,
+})
+
+-- [[ КНОПКА Meowl :3 ]]
+local ScreenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
+local ToggleBtn = Instance.new("TextButton", ScreenGui)
+Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0, 10)
+
+ToggleBtn.Size = UDim2.new(0, 90, 0, 35)
+ToggleBtn.Position = UDim2.new(0, 5, 0.4, 0)
+ToggleBtn.Text = "Meowl :3"
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleBtn.Font = Enum.Font.Code
+ToggleBtn.Draggable = true
+ToggleBtn.MouseButton1Click:Connect(function()
+    local core = game:GetService("CoreGui"):FindFirstChild("Rayfield")
+    if core then core.Enabled = not core.Enabled end
+end)
 
