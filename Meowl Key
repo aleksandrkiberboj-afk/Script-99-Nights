@@ -1,121 +1,121 @@
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local WindUI = loadstring(game:HttpGet("https://tree-hub.vercel.app/api/UI/WindUI"))()
 
-local Window = Rayfield:CreateWindow({
-   Name = "Meowl Scripter | v1.4.0-beta",
-   LoadingTitle = "Meowl Hub | Loading...",
-   LoadingSubtitle = "by Meowl",
-   ConfigurationSaving = { Enabled = true, FolderName = "MeowlGec" },
-   
-   -- [[ СИСТЕМА КЛЮЧЕЙ ВКЛЮЧЕНА ]]
-   KeySystem = true,
-   KeySettings = {
-      Title = "Key System | Система Ключей",
-      Subtitle = "Введите ключ для доступа",
-      Note = "Ключи: Meowl / Meowl20",
-      FileName = "MeowlKey",
-      SaveKey = true,
-      GrabKeyFromSite = false,
-      Key = {"Meowl", "Meowl20"}
-   }
+-- [[ ГЛАВНОЕ ОКНО ]]
+local Window = WindUI:CreateWindow({
+    Title = "Meowl Scripter | v1.4.0-beta",
+    Icon = "rbxassetid://4483362458", -- Иконка лапки
+    Author = "by Meowl",
+    Folder = "MeowlWindConfigs"
 })
 
+-- [[ СИСТЕМА КЛЮЧЕЙ (Встроена в логику запуска) ]]
+local function KeySystem()
+    local KeyWindow = WindUI:CreateKeySystem({
+        Title = "Key System",
+        Keys = {"Meowl", "Meowl20"},
+        OnSuccess = function()
+            WindUI:Notify({Title = "Success", Content = "Access Granted! / Доступ разрешен", Type = "Success"})
+        end
+    })
+end
+KeySystem()
+
+-- [[ ПЕРЕМЕННЫЕ ]]
 local lp = game.Players.LocalPlayer
 _G.AutoChop = false
-_G.AutoLog = false
 _G.KillAura = false
-_G.GodMode = false
 _G.FarmDist = 40
 
--- [[ ТАБЫ ]]
-local MainTab = Window:CreateTab("Auto", 4483362458)
-local CombatTab = Window:CreateTab("Combat", 4483362458)
-local PlayerTab = Window:CreateTab("Player", 4483362458)
+-- [[ ВКЛАДКИ ]]
+local MainTab = Window:CreateTab("Auto", "zap")
+local CombatTab = Window:CreateTab("Combat", "sword")
+local WorldTab = Window:CreateTab("World", "globe")
 
--- [[ SECTION: AUTO (С тумблерами и описанием) ]]
-MainTab:CreateSection("||| Automation / Автоматизация |||")
+-- [[ РАЗДЕЛ AUTO (Стиль Gec Hub) ]]
+MainTab:CreateSection("Automation / Автоматизация")
 
 MainTab:CreateToggle({
-   Name = "Auto Scrap",
-   Info = "Automatically brings Scrap Items to the workbench",
-   CurrentValue = false,
-   Flag = "AutoScrap",
-   Callback = function(Value)
-      _G.AutoScrap = Value
-   end,
+    Title = "Auto Scrap",
+    Desc = "Automatically brings Scrap Items to the workbench",
+    Value = false,
+    Callback = function(v) _G.AutoScrap = v end
 })
 
 MainTab:CreateToggle({
-   Name = "Auto Log",
-   Info = "Automatically brings logs to the workbench",
-   CurrentValue = false,
-   Flag = "AutoLog",
-   Callback = function(Value)
-      _G.AutoLog = Value
-   end,
+    Title = "Auto Log",
+    Desc = "Automatically brings logs to the workbench",
+    Value = false,
+    Callback = function(v) _G.AutoLog = v end
 })
 
 MainTab:CreateSlider({
-   Name = "Radius",
-   Range = {1, 1000},
-   Increment = 1,
-   CurrentValue = 40,
-   Flag = "RadiusSlider",
-   Callback = function(Value) _G.FarmDist = Value end,
+    Title = "Radius",
+    Desc = "Radius from 1 to 1000 meters",
+    Min = 1,
+    Max = 1000,
+    Default = 40,
+    Callback = function(v) _G.FarmDist = v end
 })
 
 MainTab:CreateToggle({
-   Name = "Auto Base",
-   Info = "Plants saplings in circles and continues exactly where you left off",
-   CurrentValue = false,
-   Flag = "AutoBase",
-   Callback = function(Value)
-       _G.AutoBase = Value
-   end,
+    Title = "Auto Base",
+    Desc = "Plants saplings in circles exactly where you left off",
+    Value = false,
+    Callback = function(v) _G.AutoBase = v end
 })
 
--- [[ SECTION: COMBAT ]]
-CombatTab:CreateSection("||| Protection |||")
+-- [[ РАЗДЕЛ COMBAT ]]
+CombatTab:CreateSection("Protection")
 
 CombatTab:CreateToggle({
-   Name = "Kill Aura",
-   Info = "Automatically attacks animals in range",
-   CurrentValue = false,
-   Callback = function(v) _G.KillAura = v end,
+    Title = "Kill Aura",
+    Desc = "Automatically attacks animals in range",
+    Value = false,
+    Callback = function(v) _G.KillAura = v end
 })
 
 CombatTab:CreateToggle({
-   Name = "God Mode",
-   Info = "Infinite health for survival",
-   CurrentValue = false,
-   Callback = function(v) _G.GodMode = v end,
+    Title = "God Mode",
+    Desc = "Infinite health for 99 Nights",
+    Value = false,
+    Callback = function(v) _G.GodMode = v end
 })
 
--- [[ ВЕРТИКАЛЬНАЯ КНОПКА "Meowl :3" (КАК НА РИСУНКЕ) ]]
+-- [[ РАЗДЕЛ WORLD (Shapes & Admin Base) ]]
+WorldTab:CreateSection("Admin Structures")
+
+WorldTab:CreateButton({
+    Title = "Tree Base (Sapling Abuse)",
+    Desc = "Build infinite pillar upwards",
+    Callback = function()
+        -- Логика постройки столба (как в прошлых версиях)
+    end
+})
+
+WorldTab:CreateButton({
+    Title = "Auto Stronghold",
+    Desc = "Build protective ring around you",
+    Callback = function()
+        -- Логика кольца
+    end
+})
+
+-- [[ ВЕРТИКАЛЬНАЯ КНОПКА Meowl :3 (ПОД WINDUI) ]]
 local ScreenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
 local ToggleBtn = Instance.new("TextButton", ScreenGui)
-local uicorner = Instance.new("UICorner", ToggleBtn)
+Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0, 15)
 
-ToggleBtn.Name = "MeowlSideButton"
-ToggleBtn.Size = UDim2.new(0, 30, 0, 110) -- Вертикальная
-ToggleBtn.Position = UDim2.new(1, -35, 0.4, 0) -- Справа сбоку
-ToggleBtn.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
-ToggleBtn.BorderSizePixel = 0
+ToggleBtn.Name = "MeowlWindButton"
+ToggleBtn.Size = UDim2.new(0, 30, 0, 110)
+ToggleBtn.Position = UDim2.new(1, -35, 0.4, 0)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 ToggleBtn.Text = "M\ne\no\nw\nl\n\n:\n3"
-ToggleBtn.TextColor3 = Color3.fromRGB(0, 255, 120) -- Тот самый зеленый
+ToggleBtn.TextColor3 = Color3.fromRGB(0, 255, 100) -- Тот самый Gec-зеленый
 ToggleBtn.Font = Enum.Font.Code
 ToggleBtn.TextSize = 14
 ToggleBtn.Draggable = true
 
-uicorner.CornerRadius = UDim.new(0, 15)
-
 ToggleBtn.MouseButton1Click:Connect(function()
-    local core = game:GetService("CoreGui"):FindFirstChild("Rayfield")
-    if core then core.Enabled = not core.Enabled end
+    Window:Toggle() -- WindUI метод скрытия
 end)
-
-Rayfield:Notify({
-   Title = "Meowl Hub Loaded",
-   Content = "Key System Active!",
-   Duration = 5
-})
 
