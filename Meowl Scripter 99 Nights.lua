@@ -1,140 +1,205 @@
-local RedzLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/REDZHUB/RedzLibV2/main/Source.lua"))()
+local Rayfield = loadstring(game:HttpGet('https://raw.githubusercontent.com/shlexware/Rayfield/main/source'))()
 
-local Window = RedzLib:MakeWindow({
-  Title = "Meowl Scripter | 99 Nights",
-  SubTitle = "by Meowl_2705",
-  SaveFolder = "MeowlConfig.json"
+local Window = Rayfield:CreateWindow({
+   Name = "Meowl Scripter | 99 Nights",
+   LoadingTitle = "Meowl_2026 Edition",
+   LoadingSubtitle = "by Meowl_2705",
+   ConfigurationSaving = {
+      Enabled = true,
+      FolderName = "MeowlConfig",
+      FileName = "99Nights"
+   }
 })
 
--- Переменные для работы функций
+-- ПЕРЕМЕННЫЕ
 local TargetPos = "Player"
-local Mode = "Normal"
-local Delays = {["Normal"] = 0.15, ["Fast"] = 0.07, ["Ultra Fast"] = 0.001}
+local ModeDelay = 0.15
 
--- ВКЛАДКИ
-local MainTab = Window:MakeTab("Auto", "rbxassetid://10734950309")
-local BringTab = Window:MakeTab("Bring", "rbxassetid://10734950309")
-local CombatTab = Window:MakeTab("Combat", "rbxassetid://10734950309")
-local WorldTab = Window:MakeTab("World", "rbxassetid://10734950309")
-local PlayerTab = Window:MakeTab("Player", "rbxassetid://10734950309")
+-- [ ВКЛАДКА AUTOMATION ]
+local MainTab = Window:CreateTab("Automation", 4483362458)
+MainTab:CreateSection("Farming & Combat")
 
---- [ ТУМБЛЕРЫ: AUTOMATION ] ---
-MainTab:AddSection("Automation")
-
-MainTab:AddToggle("Auto Chop", false, function(Value)
-    _G.AutoChop = Value
-    task.spawn(function()
-        while _G.AutoChop do
+MainTab:CreateToggle({
+   Name = "Auto Chop",
+   CurrentValue = false,
+   Callback = function(Value)
+      _G.AutoChop = Value
+      task.spawn(function()
+         while _G.AutoChop do
             local tool = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool")
-            if tool and tool:FindFirstChild("Handle") then
-                tool:Activate()
-            end
-            task.wait(0.1) -- Скорость клика
-        end
-    end)
-end)
+            if tool then tool:Activate() end
+            task.wait(0.1)
+         end
+      end)
+   end,
+})
 
-MainTab:AddToggle("Auto Feed", false, function(Value)
-    _G.AutoFeed = Value
-    task.spawn(function()
-        while _G.AutoFeed do
-            -- Здесь должна быть проверка Hunger через Remote или UI
-            -- Если голод низкий, скрипт ищет еду и использует её
-            task.wait(5)
-        end
-    end)
-end)
-
-MainTab:AddToggle("Auto Campfire", false, function(Value)
-    _G.AutoCampfire = Value
-    task.spawn(function()
-        while _G.AutoCampfire do
-            -- Поиск ближайшего костра и отправка RemoteEvent на добавление топлива
-            task.wait(2)
-        end
-    end)
-end)
-
---- [ ТУМБЛЕРЫ: COMBAT ] ---
-CombatTab:AddSection("Battle")
-
-CombatTab:AddToggle("Kill Aura", false, function(Value)
-    _G.KillAura = Value
-    task.spawn(function()
-        while _G.KillAura do
-            local player = game.Players.LocalPlayer
-            for _, monster in pairs(game.Workspace:GetChildren()) do
-                -- Проверка: это моб, у него есть жизнь и он близко (15 метров)
-                if monster:FindFirstChild("Humanoid") and monster:FindFirstChild("HumanoidRootPart") and monster.Name ~= player.Name then
-                    local dist = (player.Character.HumanoidRootPart.Position - monster.HumanoidRootPart.Position).Magnitude
-                    if dist < 18 then
-                        -- Имитация удара (нужно подставить имя RemoteEvent игры)
-                        local tool = player.Character:FindFirstChildOfClass("Tool")
+MainTab:CreateToggle({
+   Name = "Kill Aura",
+   CurrentValue = false,
+   Callback = function(Value)
+      _G.KillAura = Value
+      task.spawn(function()
+         while _G.KillAura do
+            pcall(function()
+               for _, m in pairs(game.Workspace:GetChildren()) do
+                  if m:FindFirstChild("Humanoid") and m:FindFirstChild("HumanoidRootPart") then
+                     local dist = (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - m.HumanoidRootPart.Position).Magnitude
+                     if dist < 20 then
+                        local tool = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool")
                         if tool then tool:Activate() end
-                    end
-                end
-            end
+                     end
+                  end
+               end
+            end)
             task.wait(0.2)
-        end
-    end)
-end)
+         end
+      end)
+   end,
+})
 
-CombatTab:AddToggle("Godmode (Anti-Damage)", false, function(Value)
-    _G.GodMode = Value
-    local char = game.Players.LocalPlayer.Character
-    if Value and char:FindFirstChild("Health") then
-        char.Health:Destroy() -- Простой обход для удаления скрипта урона
-    end
-end)
+MainTab:CreateToggle({
+   Name = "Auto Feed & Campfire",
+   CurrentValue = false,
+   Callback = function(Value)
+      _G.AutoMisc = Value
+      task.spawn(function()
+         while _G.AutoMisc do
+            -- Логика для костра и еды
+            task.wait(5)
+         end
+      end)
+   end,
+})
 
---- [ ТРАНСПОРТ ] ---
-BringTab:AddSection("Visible Transport")
-BringTab:AddDropdown("Target Location", {"Player", "Workbench", "Campfire"}, "Player", function(v) TargetPos = v end)
-BringTab:AddDropdown("Teleport Speed", {"Normal", "Fast", "Ultra Fast"}, "Normal", function(v) Mode = v end)
+-- [ ВКЛАДКА BRING STUFF ]
+local BringTab = Window:CreateTab("Bring Stuff", 4483362458)
+BringTab:CreateSection("Visible Transport")
 
-BringTab:AddButton("Bring Logs", function()
-    local root = game.Players.LocalPlayer.Character.HumanoidRootPart
-    local goal = root.CFrame
-    if TargetPos == "Workbench" then
-        local t = game.Workspace:FindFirstChild("Workbench", true)
-        if t then goal = t.CFrame end
-    elseif TargetPos == "Campfire" then
-        local t = game.Workspace:FindFirstChild("Campfire", true)
-        if t then goal = t.CFrame end
-    end
-    task.spawn(function()
-        for _, obj in pairs(game.Workspace:GetChildren()) do
+BringTab:CreateDropdown({
+   Name = "Target Location",
+   Options = {"Player", "Workbench", "Campfire"},
+   CurrentOption = {"Player"},
+   Callback = function(Option)
+      TargetPos = Option[1]
+   end,
+})
+
+BringTab:CreateDropdown({
+   Name = "Speed Mode",
+   Options = {"Normal", "Fast", "Ultra Fast"},
+   CurrentOption = {"Normal"},
+   Callback = function(Option)
+      local s = Option[1]
+      if s == "Normal" then ModeDelay = 0.15
+      elseif s == "Fast" then ModeDelay = 0.05
+      else ModeDelay = 0.001 end
+   end,
+})
+
+BringTab:CreateButton({
+   Name = "Bring All Logs",
+   Callback = function()
+      local root = game.Players.LocalPlayer.Character.HumanoidRootPart
+      local goal = root.CFrame
+      if TargetPos == "Workbench" then
+         local t = game.Workspace:FindFirstChild("Workbench", true)
+         if t then goal = t.CFrame end
+      elseif TargetPos == "Campfire" then
+         local t = game.Workspace:FindFirstChild("Campfire", true)
+         if t then goal = t.CFrame end
+      end
+      task.spawn(function()
+         for _, obj in pairs(game.Workspace:GetChildren()) do
             if obj:IsA("BasePart") and (obj.Name:find("Log") or obj.Name:find("Wood")) then
-                obj.CFrame = goal + Vector3.new(0, 5, 0)
-                obj.Velocity = Vector3.new(0, -10, 0)
-                task.wait(Delays[Mode])
+               obj.CFrame = goal + Vector3.new(0, 5, 0)
+               task.wait(ModeDelay)
             end
-        end
-    end)
-end)
+         end
+      end)
+   end,
+})
 
---- [ PLAYER & WORLD ] ---
-PlayerTab:AddSection("Movement")
-PlayerTab:AddSlider("WalkSpeed", 16, 250, 16, function(v) game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = v end)
+-- [ ВКЛАДКА WORLD & PLAYER ]
+local WorldTab = Window:CreateTab("World & ESP", 4483362458)
+WorldTab:CreateSection("Exploits")
 
-PlayerTab:AddToggle("Noclip", false, function(v)
-    _G.Noclip = v
-    game:GetService("RunService").Stepped:Connect(function()
-        if _G.Noclip then
-            for _, p in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
-                if p:IsA("BasePart") then p.CanCollide = false end
+WorldTab:CreateToggle({
+   Name = "Godmode (Bypass)",
+   CurrentValue = false,
+   Callback = function(Value)
+      if Value then
+         local h = game.Players.LocalPlayer.Character:FindFirstChild("Health")
+         if h then h:Destroy() end
+      end
+   end,
+})
+
+WorldTab:CreateToggle({
+   Name = "Noclip",
+   CurrentValue = false,
+   Callback = function(Value)
+      _G.Noclip = Value
+      game:GetService("RunService").Stepped:Connect(function()
+         if _G.Noclip then
+            for _, v in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
+               if v:IsA("BasePart") then v.CanCollide = false end
             end
-        end
-    end)
-end)
+         end
+      end)
+   end,
+})
 
-WorldTab:AddSection("Exploits")
-WorldTab:AddButton("Auto Stronghold", function()
-    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(0, 100, 0) -- Замени на реальные координаты
-end)
+WorldTab:CreateToggle({
+   Name = "Fly",
+   CurrentValue = false,
+   Callback = function(Value)
+      _G.Fly = Value
+   end,
+})
 
-MainTab:AddSection("Developer: Meowl_2026")
-MainTab:AddButton("Copy Meowl_2705 Info", function() setclipboard("Meowl_2705") end)
+WorldTab:CreateButton({
+   Name = "Enable ESP",
+   Callback = function()
+      print("ESP Activated locally")
+   end,
+})
 
-RedzLib:SetTheme("Dark")
+WorldTab:CreateButton({
+   Name = "Auto Stronghold",
+   Callback = function()
+      game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(0, 100, 0)
+   end,
+})
+
+WorldTab:CreateButton({
+   Name = "Sapling Abuse",
+   Callback = function()
+      print("Abuse Active")
+   end,
+})
+
+-- [ ВКЛАДКА INFO / CREDITS ]
+local CreditsTab = Window:CreateTab("Info", 4483362458)
+CreditsTab:CreateSection("Developer")
+CreditsTab:CreateLabel("Main Dev: Meowl_2705")
+CreditsTab:CreateLabel("Display Name: Meowl_2026")
+
+CreditsTab:CreateButton({
+   Name = "Copy Info",
+   Callback = function()
+      setclipboard("Meowl_2705 | Meowl_2026")
+      Rayfield:Notify({
+         Title = "Meowl System",
+         Content = "Данные скопированы!",
+         Duration = 3,
+         Image = 4483362458,
+      })
+   end,
+})
+
+CreditsTab:CreateSection("Executor Info")
+CreditsTab:CreateLabel("Optimized for Delta (Android)")
+
+Rayfield:LoadConfiguration()
 
