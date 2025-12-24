@@ -4,7 +4,7 @@
 if _G.MeowlScripterLoaded then return end
 _G.MeowlScripterLoaded = true
 
-local Fluent = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/main.lua"))()
+ local Fluent = loadstring(game:HttpGet("https://raw.githubusercontent.com/DawidSzymanek/Fluent/main/Source.lua"))()
 local Window = Fluent:CreateWindow({
     Title = "Meowl Scripter | 99 Nights ❄️🔥",
     SubTitle = "Forest Adventure ~ Delta Edition",
