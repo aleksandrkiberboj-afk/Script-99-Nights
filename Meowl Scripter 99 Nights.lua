@@ -1,4 +1,3 @@
-https://raw.githubusercontent.com/aleksandrkiberboj-afk/Script-99-Nights/main/Meowl%20Scripter%2099%20Nights.lua?v=
 local Rayfield = loadstring(game:HttpGet('https://raw.githubusercontent.com/shlexware/Rayfield/main/source'))()
 
 local Window = Rayfield:CreateWindow({
@@ -17,7 +16,9 @@ MoveTab:CreateSlider({
    Range = {16, 160},
    Increment = 1,
    CurrentValue = 16,
-   Callback = function(v) game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = v end,
+   Callback = function(v) 
+      pcall(function() game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = v end)
+   end,
 })
 
 MoveTab:CreateToggle({
@@ -27,9 +28,11 @@ MoveTab:CreateToggle({
       _G.Noclip = v
       game:GetService("RunService").Stepped:Connect(function()
          if _G.Noclip then
-            for _, p in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
-               if p:IsA("BasePart") then p.CanCollide = false end
-            end
+            pcall(function()
+               for _, p in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
+                  if p:IsA("BasePart") then p.CanCollide = false end
+               end
+            end)
          end
       end)
    end,
@@ -52,24 +55,31 @@ WorldTab:CreateToggle({
    end,
 })
 
--- [ RESCUE & AUTO ]
+-- [ AUTOMATION ]
 local AutoTab = Window:CreateTab("Automation", 4483362458)
 AutoTab:CreateButton({
    Name = "TP & Rescue Official Kids",
    Callback = function()
-      local root = game.Players.LocalPlayer.Character.HumanoidRootPart
-      for _, name in pairs(Kids) do
-          local c = game.Workspace:FindFirstChild(name, true)
-          if c and c:FindFirstChild("HumanoidRootPart") then
-              root.CFrame = c.HumanoidRootPart.CFrame
-              task.wait(0.5)
-              local p = c:FindFirstChildOfClass("ProximityPrompt")
-              if p then fireproximityprompt(p) end
-              task.wait(0.5)
-          end
+      local root = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+      if root then
+         for _, name in pairs(Kids) do
+            local c = game.Workspace:FindFirstChild(name, true)
+            if c and c:FindFirstChild("HumanoidRootPart") then
+               root.CFrame = c.HumanoidRootPart.CFrame
+               task.wait(0.5)
+               local p = c:FindFirstChildOfClass("ProximityPrompt") or c:FindFirstChild("Interaction", true)
+               if p then fireproximityprompt(p) end
+               task.wait(0.5)
+            end
+         end
       end
    end,
 })
+
+-- [ INFO ]
+local InfoTab = Window:CreateTab("Info", 4483362458)
+InfoTab:CreateLabel("Main Dev: Meowl_2705")
+InfoTab:CreateLabel("Display: Meowl_2026")
 
 Rayfield:LoadConfiguration()
 
